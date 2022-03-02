@@ -74,9 +74,10 @@ n = abs (190 - len(new_df))
 
 #Remove the last n rows
 df_dropping_last_n = new_df.iloc[10:-n]
+#df_dropping_last_n = new_df
 
 df_dropping_last_n.plot(legend = False)
-plt.title('glucose level '+ str(glucose_level) +' mg/dl (zoomed)')
+plt.title('glucose level '+ str(glucose_level) +' mg/dl (cropped)')
 plt.xlabel('Wavelength (nm)')
 plt.show()
 
@@ -118,12 +119,22 @@ plt.show()
 
 
 
-d = {'peak 1': [peaks[0], np.round(fwhm_approx[2][0]), np.round(fwhm_approx[3][0]) ],
-     'peak 2': [peaks[1], np.round(fwhm_approx[2][1]), np.round(fwhm_approx[3][1]) ],
-     'peak 3': [peaks[2], np.round(fwhm_approx[2][2]), np.round(fwhm_approx[3][2]) ]}
+d = {'band 1': [peaks[0], np.round(fwhm_approx[2][0]), np.round(fwhm_approx[3][0]) ],
+     'band 2': [peaks[1], np.round(fwhm_approx[2][1]), np.round(fwhm_approx[3][1]) ],
+     'band 3': [peaks[2], np.round(fwhm_approx[2][2]), np.round(fwhm_approx[3][2]) ]}
 
 index_ = ['peak_point', 'x_min', 'x_max']
+
+
+
+
+## save outputs
 df_range = pd.DataFrame(data=d,index=index_)
+df_range.to_csv('../data/processed/'+ date + '/bands_range.csv')
+
+cropped_data = final_df.iloc[10:-n]
+cropped_data.to_csv('../data/processed/'+ date + '/cropped_data.csv', index = False)
+
 
 
 
