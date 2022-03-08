@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 date = '20220211'
-fig = plt.figure(figsize = (5,5))
+fig, (ax, ax_)  = plt.subplots(1, 2, figsize=(12, 6))
 #uniform_data = np.random.rand(10, 1)
 uniform_data = pd.read_csv('../results/accuracies/accuracy_band_1.csv')
 cmap = mpl.cm.Blues_r
@@ -40,6 +40,5 @@ for lab, annot in zip(ax.get_yticklabels(), ax.texts):
 
             x_count += 1
     y_count += 1
-
 
 

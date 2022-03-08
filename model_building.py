@@ -5,6 +5,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 from itertools import islice
+import seaborn as sns
 
 
 date = '20220211'
@@ -26,11 +27,6 @@ processed_cropped.drop(['Temp','glucose_level','Round','measurement_type'],axis 
 X = processed_cropped
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.50, random_state=1)
-
-
-
-
-
 
 
 
@@ -57,7 +53,7 @@ def create_model_and_accuracy(X_train_cropped, y_train_cropped,X_test_cropped, y
     :return:
     '''
 
-    model = RandomForestClassifier()
+    model = RandomForestClassifier(random_state = 42)
     model.fit(X_train_cropped, y_train_cropped)
     yhat = model.predict(X_test_cropped)
     acc = accuracy_score(y_test_cropped, yhat)
@@ -68,6 +64,8 @@ def create_model_and_accuracy(X_train_cropped, y_train_cropped,X_test_cropped, y
 ###########################################################################################
 ###########################################################################################
 
+X_test_selected_bands = []
+X_train_selected_bands = []
 #iterate over the numbers of window ranges we want to look at
 for idx, col in enumerate(bands_range):
 
@@ -93,4 +91,45 @@ for idx, col in enumerate(bands_range):
         accuracy.append(accuracy_per_window_list)
 
     list_2_df = pd.DataFrame(accuracy, columns=length_col)
-    list_2_df.to_csv('../results/accuracies/accuracy_'+ col + '.csv')
+    list_2_df.to_csv('../results/accuracies/accuracy_'+ col + '.csv',index= False)
+    sns.heatmap(data = list_2_df, annot=True).set(title = col)
+    #plt.title(col, annot=True)
+
+
+
+    # select the chosen features per branch
+    if col == 'band_1':
+    
+        starting_index = 15
+        window_size = 5
+        df_range_train = X_train.iloc[:,starting_index : starting_index + window_size]
+        df_range_test = X_test.iloc[:,starting_index : starting_index + window_size]
+
+    elif col == 'band_2':
+    
+        starting_index = 38
+        window_size = 16
+        df_range_train = X_train.iloc[:,starting_index : starting_index + window_size]
+        df_range_test = X_test.iloc[:,starting_index : starting_index + window_size]
+
+    elif col == 'band_3':
+    
+        starting_index = 125
+        window_size = 3
+        df_range_train = X_train.iloc[:,starting_index : starting_index + window_size]
+        df_range_test = X_test.iloc[:,starting_index : starting_index + window_size]
+
+
+    X_test_selected_bands.append(df_range_test)
+    X_train_selected_bands.append(df_range_train)
+
+
+X_test_selected_bands_df  = pd.concat(X_test_selected_bands,axis=1)
+X_train_selected_bands_df = pd.concat(X_train_selected_bands,axis=1)
+
+A = 1
+
+#final
+acc = create_model_and_accuracy(X_train_selected_bands_df, y_train,X_test_selected_bands_df, y_test)
+print('Accuracy:', acc)
+

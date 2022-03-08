@@ -3,6 +3,7 @@ import pandas as pd
 from my_functions import subtract_baseline_glucose
 from matplotlib import pyplot as plt
 from scipy.signal import chirp, find_peaks, peak_widths
+import matplotlib.patches as mpatches
 
 
 date = '20220211'
@@ -46,6 +47,36 @@ for round in rounds:
 
 final_df = pd.concat(df_list)
 
+
+
+# plot each concentration with different color
+df_300 = final_df[final_df['glucose_level'] == 300]
+df_300.drop(['glucose_level', 'Round', 'measurement_type'],axis = 1, inplace = True)
+df_300 = df_300.T
+
+df_1100 = final_df[final_df['glucose_level'] == 1100]
+df_1100.drop(['glucose_level', 'Round', 'measurement_type'],axis = 1, inplace = True)
+df_1100 = df_1100.T
+
+df_5000 = final_df[final_df['glucose_level'] == 5000]
+df_5000.drop(['glucose_level', 'Round', 'measurement_type'],axis = 1, inplace = True)
+df_5000 = df_5000.T
+
+fig = plt.figure(figsize = (20,10))
+plt.plot(df_300, color = 'red', label = 'glucose_level 300')
+plt.plot(df_1100, color = 'blue', label = 'glucose_level 1000')
+plt.plot(df_5000, color = 'green', label = 'glucose_level 5000')
+
+
+red_patch = mpatches.Patch(color='red',label = 'glucose_level 300')
+blue_patch = mpatches.Patch(color='blue',label = 'glucose_level 1100')
+green_patch = mpatches.Patch(color='green',label = 'glucose_level 5000')
+plt.legend(handles=[red_patch,blue_patch,green_patch])
+
+plt.title('Glucose concentration')
+plt.xlabel('wavelength')
+plt.ylabel('transmittance')
+plt.show()
 
 ###################################################
 ###################################################
@@ -119,9 +150,9 @@ plt.show()
 
 
 
-d = {'band 1': [peaks[0], np.round(fwhm_approx[2][0]), np.round(fwhm_approx[3][0]) ],
-     'band 2': [peaks[1], np.round(fwhm_approx[2][1]), np.round(fwhm_approx[3][1]) ],
-     'band 3': [peaks[2], np.round(fwhm_approx[2][2]), np.round(fwhm_approx[3][2]) ]}
+d = {'band_1': [peaks[0], np.round(fwhm_approx[2][0]), np.round(fwhm_approx[3][0]) ],
+     'band_2': [peaks[1], np.round(fwhm_approx[2][1]), np.round(fwhm_approx[3][1]) ],
+     'band_3': [peaks[2], np.round(fwhm_approx[2][2]), np.round(fwhm_approx[3][2]) ]}
 
 index_ = ['peak_point', 'x_min', 'x_max']
 
