@@ -9,6 +9,7 @@ import seaborn as sns
 
 
 date = '20220211'
+integrate = 0
 
 
 processed_cropped_path = '../data/processed/'+ date + '/cropped_data.csv'
@@ -84,6 +85,12 @@ for idx, col in enumerate(bands_range):
             X_train_cropped = X_train.iloc[:,w[0]:w[-1]+1]
             X_test_cropped = X_test.iloc[:, w[0]:w[-1] + 1]
 
+            if integrate  == 1:
+                X_train_cropped_ = X_train_cropped.sum(axis=1)
+                X_train_cropped = X_train_cropped_.to_frame()
+
+                X_test_cropped_ = X_test_cropped.sum(axis=1)
+                X_test_cropped =  X_test_cropped_.to_frame()
 
             #Apply model to the cropped df and get accuracy score
             acc = create_model_and_accuracy(X_train_cropped, y_train,X_test_cropped, y_test)
@@ -112,7 +119,7 @@ for idx, col in enumerate(bands_range):
         df_range_train = X_train.iloc[:,starting_index : starting_index + window_size]
         df_range_test = X_test.iloc[:,starting_index : starting_index + window_size]
 
-    elif col == 'band_3':
+    elif col == 'band_3_':
     
         starting_index = 125
         window_size = 3
@@ -127,9 +134,17 @@ for idx, col in enumerate(bands_range):
 X_test_selected_bands_df  = pd.concat(X_test_selected_bands,axis=1)
 X_train_selected_bands_df = pd.concat(X_train_selected_bands,axis=1)
 
-A = 1
+
 
 #final
 acc = create_model_and_accuracy(X_train_selected_bands_df, y_train,X_test_selected_bands_df, y_test)
 print('Accuracy:', acc)
 
+
+data = d = {'Band 1': [0.81], 'Band 2': [0.98], 'Band 3': [0.89], 'Band 1,2': [0.98], 'Band 1,2,3': [1] }
+Final_score = pd.DataFrame(d)
+plt.plot(Final_score.T, marker = 'o')
+plt.show()
+plt.xlabel('Bands')
+plt.ylabel(' Accuracy ')
+A = 1
