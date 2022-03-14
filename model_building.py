@@ -27,7 +27,13 @@ y = processed_cropped['glucose_level']
 processed_cropped.drop(['Temp','glucose_level','Round','measurement_type'],axis = 1, inplace = True)
 X = processed_cropped
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.50, random_state=1)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30, random_state=42)
+
+
+'''
+plt.plot(X.T)
+plt.show()
+'''
 
 
 
@@ -67,6 +73,10 @@ def create_model_and_accuracy(X_train_cropped, y_train_cropped,X_test_cropped, y
 
 X_test_selected_bands = []
 X_train_selected_bands = []
+column_names = []
+new_start_index = []
+window_size_tmp = []
+
 #iterate over the numbers of window ranges we want to look at
 for idx, col in enumerate(bands_range):
 
@@ -75,6 +85,7 @@ for idx, col in enumerate(bands_range):
     length_col = list(range(x_1,x_2+1))
 
     accuracy = []
+
     #iterate over the length of the window
     for window_size in range(0,len(length_col)):
         windows = sliding_window(length_col, window_size+1)
@@ -102,37 +113,121 @@ for idx, col in enumerate(bands_range):
     sns.heatmap(data = list_2_df, annot=True).set(title = col)
     #plt.title(col, annot=True)
 
+    if not integrate:
 
+        # select the chosen features per branch
+        if col == 'band_1':
 
-    # select the chosen features per branch
-    if col == 'band_1':
-    
-        starting_index = 15
-        window_size = 5
-        df_range_train = X_train.iloc[:,starting_index : starting_index + window_size]
-        df_range_test = X_test.iloc[:,starting_index : starting_index + window_size]
+            starting_index = 12
+            window_size = 3
+            df_range_train = X_train.iloc[:,starting_index : starting_index + window_size]
+            df_range_test = X_test.iloc[:,starting_index : starting_index + window_size]
 
-    elif col == 'band_2':
-    
-        starting_index = 38
-        window_size = 16
-        df_range_train = X_train.iloc[:,starting_index : starting_index + window_size]
-        df_range_test = X_test.iloc[:,starting_index : starting_index + window_size]
+        elif col == 'band_2':
 
-    elif col == 'band_3_':
-    
-        starting_index = 125
-        window_size = 3
-        df_range_train = X_train.iloc[:,starting_index : starting_index + window_size]
-        df_range_test = X_test.iloc[:,starting_index : starting_index + window_size]
+            starting_index = 46
+            window_size = 4
+            df_range_train = X_train.iloc[:,starting_index : starting_index + window_size]
+            df_range_test = X_test.iloc[:,starting_index : starting_index + window_size]
 
+        elif col == 'band_3':
+
+            starting_index = 86
+            window_size = 5
+            df_range_train = X_train.iloc[:,starting_index : starting_index + window_size]
+            df_range_test = X_test.iloc[:,starting_index : starting_index + window_size]
+        elif col == 'band_4':
+
+            starting_index = 124
+            window_size = 4
+            df_range_train = X_train.iloc[:, starting_index: starting_index + window_size]
+            df_range_test = X_test.iloc[:, starting_index: starting_index + window_size]
+
+    elif integrate:
+        # select the chosen features per branch
+        if col == 'band_1':
+
+            starting_index = 12
+            window_size = 3
+            df_range_train = X_train.iloc[:, starting_index: starting_index + window_size]
+            df_range_test = X_test.iloc[:, starting_index: starting_index + window_size]
+
+            # project training and test data into 1D
+            df_range_train_ = df_range_train.sum(axis=1)
+            df_range_train = df_range_train_.to_frame()
+
+            df_range_test_ = df_range_test.sum(axis=1)
+            df_range_test = df_range_test_.to_frame()
+
+        elif col == 'band_2':
+
+            starting_index = 45
+            window_size = 3
+            df_range_train = X_train.iloc[:, starting_index: starting_index + window_size]
+            df_range_test = X_test.iloc[:, starting_index: starting_index + window_size]
+
+            # project training and test data into 1D
+            df_range_train_ = df_range_train.sum(axis=1)
+            df_range_train = df_range_train_.to_frame()
+
+            df_range_test_ = df_range_test.sum(axis=1)
+            df_range_test = df_range_test_.to_frame()
+
+        elif col == 'band_3':
+
+            starting_index = 86
+            window_size = 5
+            df_range_train = X_train.iloc[:, starting_index: starting_index + window_size]
+            df_range_test = X_test.iloc[:, starting_index: starting_index + window_size]
+
+            # project training and test data into 1D
+            df_range_train_ = df_range_train.sum(axis=1)
+            df_range_train = df_range_train_.to_frame()
+
+            df_range_test_ = df_range_test.sum(axis=1)
+            df_range_test = df_range_test_.to_frame()
+
+        elif col == 'band_4':
+
+            starting_index = 123
+            window_size = 4
+            df_range_train = X_train.iloc[:, starting_index: starting_index + window_size]
+            df_range_test = X_test.iloc[:, starting_index: starting_index + window_size]
+
+            #project training and test data into 1D
+            df_range_train_ = df_range_train.sum(axis=1)
+            df_range_train = df_range_train_.to_frame()
+
+            df_range_test_ = df_range_test.sum(axis=1)
+            df_range_test = df_range_test_.to_frame()
+
+    column_names.append(col)
+    new_start_index.append(starting_index)
+    window_size_tmp.append(window_size)
 
     X_test_selected_bands.append(df_range_test)
     X_train_selected_bands.append(df_range_train)
 
 
+df_range= pd.DataFrame({
+        "start_index":new_start_index,
+        "window_size": window_size_tmp
+        })
+
+#store selected index
+
+
+
 X_test_selected_bands_df  = pd.concat(X_test_selected_bands,axis=1)
 X_train_selected_bands_df = pd.concat(X_train_selected_bands,axis=1)
+
+
+
+
+
+
+
+
 
 
 
@@ -141,6 +236,10 @@ acc = create_model_and_accuracy(X_train_selected_bands_df, y_train,X_test_select
 print('Accuracy:', acc)
 
 
+
+
+
+'''
 data = d = {'Band 1': [0.81], 'Band 2': [0.98], 'Band 3': [0.89], 'Band 1,2': [0.98], 'Band 1,2,3': [1] }
 Final_score = pd.DataFrame(d)
 plt.plot(Final_score.T, marker = 'o')
@@ -148,3 +247,29 @@ plt.show()
 plt.xlabel('Bands')
 plt.ylabel(' Accuracy ')
 A = 1
+'''
+
+
+fig, ax = plt.subplots()
+ax.plot(X_train.T)
+
+for i in range(0,len(df_range)):
+    x_1 = df_range.iloc[i,0]
+    x_2 = x_1 + df_range.iloc[i,1]
+    ax.axvspan(x_1, x_2, alpha=0.5, color='red')
+
+plt.xlabel('wavelength')
+plt.ylabel('transmittance')
+
+
+
+if integrate:
+    plt.title('Glucose concentration (Accumulation)')
+else:
+    plt.title('Glucose concentration')
+
+plt.show()
+A=1
+
+
+

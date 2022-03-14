@@ -133,7 +133,8 @@ df_2_array = df2.to_numpy().flatten()
 x = df_2_array
 
 peaks, _ = find_peaks(df_2_array, prominence=1)
-peaks = [14,51,125]
+peaks = [14, 51, 95, 125]
+# peaks = [14, 51, 125]
 fwhm_approx = peak_widths(df_2_array, peaks, rel_height=0.6)
 
 
@@ -149,11 +150,17 @@ plt.hlines(*fwhm_approx[1:], color="C2")
 plt.show()
 
 
+#manually add the 3rd peak and index
 
 d = {'band_1': [peaks[0], np.round(fwhm_approx[2][0]), np.round(fwhm_approx[3][0]) ],
      'band_2': [peaks[1], np.round(fwhm_approx[2][1]), np.round(fwhm_approx[3][1]) ],
+     'band_3': [95, 78, 111 ],
+     'band_4': [peaks[3], np.round(fwhm_approx[2][3]), np.round(fwhm_approx[3][3]) ]}
+'''
+d = {'band_1': [peaks[0], np.round(fwhm_approx[2][0]), np.round(fwhm_approx[3][0]) ],
+     'band_2': [peaks[1], np.round(fwhm_approx[2][1]), np.round(fwhm_approx[3][1]) ],
      'band_3': [peaks[2], np.round(fwhm_approx[2][2]), np.round(fwhm_approx[3][2]) ]}
-
+'''
 index_ = ['peak_point', 'x_min', 'x_max']
 
 
@@ -163,10 +170,51 @@ index_ = ['peak_point', 'x_min', 'x_max']
 df_range = pd.DataFrame(data=d,index=index_)
 df_range.to_csv('../data/processed/'+ date + '/bands_range.csv')
 
-cropped_data = final_df.iloc[10:-n]
-cropped_data.to_csv('../data/processed/'+ date + '/cropped_data.csv', index = False)
+df_tmp = final_df[['Temp', 'glucose_level', 'measurement_type', 'Round']]
+final_df.drop(['Temp', 'glucose_level', 'measurement_type', 'Round'], inplace  = True, axis = 1)
+cropped_data = final_df.iloc[:, 10:-n]
+cropped_data_ = pd.concat([cropped_data,df_tmp], axis=1)
+cropped_data_.to_csv('../data/processed/'+ date + '/cropped_data.csv', index = False)
 
 
+#group by glucose level
+cropped_data['glucose_level'] = df_tmp['glucose_level']
+cropped_data_300  = cropped_data[ cropped_data['glucose_level'] == 300  ]
+cropped_data_1100 = cropped_data[ cropped_data['glucose_level'] == 1100 ]
+cropped_data_5000 = cropped_data[ cropped_data['glucose_level'] == 5000 ]
+
+cropped_data_300.drop('glucose_level',inplace = True, axis = 1)
+cropped_data_1100.drop('glucose_level',inplace = True, axis = 1)
+cropped_data_5000.drop('glucose_level',inplace = True, axis = 1)
+
+fig, ax = plt.subplots()
+ax.plot(cropped_data_300.T, color = 'red')
+ax.plot(cropped_data_1100.T, color = 'blue')
+ax.plot(cropped_data_5000.T, color = 'green')
+
+#add vertical band lines
+for i in range(0,len(peaks)):
+    x_1 = df_range.iloc[1,i]
+    x_2 = df_range.iloc[2,i]
+    ax.axvspan(x_1, x_2, alpha=0.5, color='red')
+
+
+
+
+red_patch = mpatches.Patch(color='red',label = 'glucose_level 300')
+blue_patch = mpatches.Patch(color='blue',label = 'glucose_level 1100')
+green_patch = mpatches.Patch(color='green',label = 'glucose_level 5000')
+plt.legend(handles=[red_patch,blue_patch,green_patch])
+
+plt.title('Glucose concentration')
+plt.xlabel('wavelength')
+plt.ylabel('transmittance')
+plt.show()
+
+
+#plt.plot(cropped_data.T)
+#plt.show()
+#A = 1
 
 
 
