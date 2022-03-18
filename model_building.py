@@ -3,7 +3,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
+
 from itertools import islice
 import seaborn as sns
 
@@ -28,6 +31,28 @@ processed_cropped.drop(['Temp','glucose_level','Round','measurement_type'],axis 
 X = processed_cropped
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30, random_state=42)
+
+
+
+#############################################################
+#############################################################
+# Step 1
+#############################################################
+#############################################################
+
+
+model_1 = RandomForestClassifier(random_state=42)
+model_1.fit(X_train,y_train)
+
+feat_importances = pd.Series(model_1.feature_importances_, index=processed_cropped.columns)
+feat_importances.nlargest(20).plot(kind='barh')
+plt.show()
+
+y_hat = model_1.predict(X_test)
+accuracy = accuracy_score(y_test, y_hat)
+A = 1
+
+
 
 
 '''
@@ -61,6 +86,7 @@ def create_model_and_accuracy(X_train_cropped, y_train_cropped,X_test_cropped, y
     '''
 
     model = RandomForestClassifier(random_state = 42)
+    #model = SVC(random_state=42)
     model.fit(X_train_cropped, y_train_cropped)
     yhat = model.predict(X_test_cropped)
     acc = accuracy_score(y_test_cropped, yhat)
