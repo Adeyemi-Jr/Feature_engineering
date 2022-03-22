@@ -114,8 +114,9 @@ plt.show()
 
 
 #Compute mean of all measuremnts
-df2 = df_dropping_last_n.mean(axis=1).to_frame()
-df2.plot()
+#df2 = df_dropping_last_n.mean(axis=1).to_frame()
+df2 = new_df.mean(axis=1).to_frame()
+df2.iloc[10:-n].plot()
 plt.title('glucose level '+ str(glucose_level) +' mg/dl (mean)')
 plt.xlabel('Wavelength (nm)')
 plt.show()
@@ -134,8 +135,8 @@ x = df_2_array
 
 peaks, _ = find_peaks(df_2_array, prominence=1)
 peaks = [14, 51, 95, 125]
-# peaks = [14, 51, 125]
-fwhm_approx = peak_widths(df_2_array, peaks, rel_height=0.6)
+peaks = [x+10 for x in peaks]
+fwhm_approx = peak_widths(df_2_array[10:-n], peaks, rel_height=0.6)
 
 
 plt.plot(peaks, x[peaks], "xr"); plt.plot(x); plt.legend(['peaks'])
@@ -151,16 +152,23 @@ plt.show()
 
 
 #manually add the 3rd peak and index
-
+'''
 d = {'band_1': [peaks[0], np.round(fwhm_approx[2][0]), np.round(fwhm_approx[3][0]) ],
      'band_2': [peaks[1], np.round(fwhm_approx[2][1]), np.round(fwhm_approx[3][1]) ],
      'band_3': [95, 78, 111 ],
-     'band_4': [peaks[3], np.round(fwhm_approx[2][3]), np.round(fwhm_approx[3][3]) ]}
-'''
+     #'band_4': [peaks[3], np.round(fwhm_approx[2][3]), np.round(fwhm_approx[3][3]) ]
+     'band_4': [peaks[3], np.round(fwhm_approx[2][3]), 145 ]}
+
 d = {'band_1': [peaks[0], np.round(fwhm_approx[2][0]), np.round(fwhm_approx[3][0]) ],
      'band_2': [peaks[1], np.round(fwhm_approx[2][1]), np.round(fwhm_approx[3][1]) ],
      'band_3': [peaks[2], np.round(fwhm_approx[2][2]), np.round(fwhm_approx[3][2]) ]}
 '''
+#manually selection of the bands
+d = {'band_1': [ peaks[0], 20, 33 ],
+     'band_2': [ peaks[1], 48, 66 ],
+     'band_3': [ peaks[2], 88, 121 ],
+     'band_4': [ peaks[3], 127, 140 ]}
+
 index_ = ['peak_point', 'x_min', 'x_max']
 
 
@@ -172,7 +180,8 @@ df_range.to_csv('../data/processed/'+ date + '/bands_range.csv')
 
 df_tmp = final_df[['Temp', 'glucose_level', 'measurement_type', 'Round']]
 final_df.drop(['Temp', 'glucose_level', 'measurement_type', 'Round'], inplace  = True, axis = 1)
-cropped_data = final_df.iloc[:, 10:-n]
+#cropped_data = final_df.iloc[:, 10:-n]
+cropped_data = final_df
 cropped_data_ = pd.concat([cropped_data,df_tmp], axis=1)
 cropped_data_.to_csv('../data/processed/'+ date + '/cropped_data.csv', index = False)
 
