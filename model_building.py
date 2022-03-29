@@ -12,7 +12,9 @@ import seaborn as sns
 
 
 date = '20220211'
-integrate = 0
+integrate = 1
+extend_band = 1
+LED_present = 1
 
 
 processed_cropped_path = '../data/processed/'+ date + '/cropped_data.csv'
@@ -21,10 +23,40 @@ processed_cropped = pd.read_csv(processed_cropped_path)
 bands_range_path = '../data/processed/'+ date + '/bands_range.csv'
 bands_range = pd.read_csv(bands_range_path,index_col=0)
 
+
+if LED_present == 1:
+    LED_path = '../data/processed/LEDs/LED_kernels.csv'
+    LED_spectrum = pd.read_csv(LED_path)
+
+
 #encode the label column
 processed_cropped['glucose_level'][processed_cropped['glucose_level'] == 300] = 0
 processed_cropped['glucose_level'][processed_cropped['glucose_level'] == 1100] = 1
 processed_cropped['glucose_level'][processed_cropped['glucose_level'] == 5000] = 2
+
+'''
+# Plot data, bands and the spectrum
+if LED_present == 1:
+    df_5000_glucose = processed_cropped[processed_cropped['glucose_level'] == 2]
+    df_5000_glucose.drop(['Temp', 'glucose_level', 'Round', 'measurement_type'], axis=1, inplace=True)
+    df_5000_glucose = df_5000_glucose.mean(axis=0).to_frame()
+    peaks = bands_range.iloc[0].values.tolist()
+
+    fig, ax1 = plt.subplots()
+    ax2 = ax1.twinx()
+    ax1.plot(df_5000_glucose.iloc[10:-47],  'g-', label = 'data')
+    ax2.plot(LED_spectrum.iloc[10:-47, 1:], 'b-', label = 'LED')
+
+    for i in range(0, len(peaks)):
+        x_1 = bands_range.iloc[1, i]-10
+        x_2 = bands_range.iloc[2, i]-10
+        ax1.axvspan(x_1, x_2, alpha=0.5, color='red')
+    plt.show()
+
+'''
+
+
+
 
 y = processed_cropped['glucose_level']
 processed_cropped.drop(['Temp','glucose_level','Round','measurement_type'],axis = 1, inplace = True)
@@ -33,6 +65,10 @@ X = processed_cropped
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30, random_state=42)
 
 
+if extend_band:
+    length_extension = 5
+else:
+    length_extension = 0
 
 #############################################################
 #############################################################
@@ -106,8 +142,8 @@ window_size_tmp = []
 #iterate over the numbers of window ranges we want to look at
 for idx, col in enumerate(bands_range):
 
-    x_1 = int(bands_range[col].iloc[1])
-    x_2 = int(bands_range[col].iloc[-1])
+    x_1 = int(bands_range[col].iloc[1]) - length_extension
+    x_2 = int(bands_range[col].iloc[-1]) + length_extension
     length_col = list(range(x_1,x_2+1))
 
     accuracy = []
@@ -173,8 +209,9 @@ for idx, col in enumerate(bands_range):
         # select the chosen features per branch
         if col == 'band_1':
 
-            starting_index = 12
+            starting_index = 22
             window_size = 3
+
             df_range_train = X_train.iloc[:, starting_index: starting_index + window_size]
             df_range_test = X_test.iloc[:, starting_index: starting_index + window_size]
 
@@ -187,7 +224,7 @@ for idx, col in enumerate(bands_range):
 
         elif col == 'band_2':
 
-            starting_index = 45
+            starting_index = 55
             window_size = 3
             df_range_train = X_train.iloc[:, starting_index: starting_index + window_size]
             df_range_test = X_test.iloc[:, starting_index: starting_index + window_size]
@@ -201,7 +238,7 @@ for idx, col in enumerate(bands_range):
 
         elif col == 'band_3':
 
-            starting_index = 86
+            starting_index = 96
             window_size = 5
             df_range_train = X_train.iloc[:, starting_index: starting_index + window_size]
             df_range_test = X_test.iloc[:, starting_index: starting_index + window_size]
@@ -215,7 +252,7 @@ for idx, col in enumerate(bands_range):
 
         elif col == 'band_4':
 
-            starting_index = 123
+            starting_index = 133
             window_size = 4
             df_range_train = X_train.iloc[:, starting_index: starting_index + window_size]
             df_range_test = X_test.iloc[:, starting_index: starting_index + window_size]
@@ -226,6 +263,7 @@ for idx, col in enumerate(bands_range):
 
             df_range_test_ = df_range_test.sum(axis=1)
             df_range_test = df_range_test_.to_frame()
+
 
     column_names.append(col)
     new_start_index.append(starting_index)

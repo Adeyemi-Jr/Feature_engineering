@@ -164,10 +164,10 @@ d = {'band_1': [peaks[0], np.round(fwhm_approx[2][0]), np.round(fwhm_approx[3][0
      'band_3': [peaks[2], np.round(fwhm_approx[2][2]), np.round(fwhm_approx[3][2]) ]}
 '''
 #manually selection of the bands
-d = {'band_1': [ peaks[0], 20, 33 ],
-     'band_2': [ peaks[1], 48, 66 ],
+d = {'band_1': [ peaks[0], 22, 29 ],
+     'band_2': [ peaks[1], 48, 64 ],
      'band_3': [ peaks[2], 88, 121 ],
-     'band_4': [ peaks[3], 127, 140 ]}
+     'band_4': [ peaks[3], 131, 138 ]}
 
 index_ = ['peak_point', 'x_min', 'x_max']
 

@@ -75,6 +75,7 @@ for i in data.columns:
 
 scaled_data = pd.concat(scaled_data,axis = 1)
 scaled_data.columns = data.columns
+scaled_data.set_index(data.index, inplace=True)
 
 
 plt.plot(scaled_data)
