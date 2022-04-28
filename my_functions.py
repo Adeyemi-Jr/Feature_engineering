@@ -2,6 +2,8 @@ import io
 import os.path
 import numpy as np
 import pandas as pd
+import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
 
 def read_RF_data(path,S_parameter):
 
@@ -54,42 +56,74 @@ def subtract_baseline_glucose(df_path_1, df_path_2 ):
     #check if input is a path or a dataframe
     if type(df_path_1) == str:
         #read path
-        df_1 = pd.read_csv(df_path_1)
-        df_2 = pd.read_csv(df_path_2)
+        df_1_tmp = pd.read_csv(df_path_1)
+        df_2_tmp = pd.read_csv(df_path_2)
     else:
         #read dataframe
-        df_1 = df_path_1
-        df_2 = df_path_2
+        df_1_tmp = df_path_1
+        df_2_tmp = df_path_2
 
-    # assign dataframe to dictionary
-    df_dict = {}
-    df_dict[1] = df_1
-    df_dict[2] = df_2
 
-    # find which dataframe has zero glucose
-    if df_dict[1]['glucose_level'].sum() == 0:
-        baseline_df = df_1
-        glucose_df = df_2
+    feature_name =  list(df_1_tmp.columns)
+    #get unique numbers in list
+    Rounds = df_1_tmp['Round'].unique()
 
-    elif df_dict[2]['glucose_level'].sum() == 0:
-        baseline_df = df_2
-        glucose_df = df_1
+    output = []
+    for round in Rounds:
+        df_1 = df_1_tmp[df_1_tmp['Round']== round]
+        df_2 = df_2_tmp[df_2_tmp['Round'] == round]
+        # assign dataframe to dictionary
+        df_dict = {}
+        df_dict[1] = df_1
+        df_dict[2] = df_2
 
-    # find mean of the baseline
-    basline_df_mean = baseline_df.iloc[:].mean(axis=0).to_frame().T
+        # find which dataframe has zero glucose
+        if df_dict[1]['glucose_level'].sum() == 0:
+            baseline_df = df_1
+            glucose_df = df_2
 
-    #set temperature to zero
-    basline_df_mean['Temp'] = 0
-    num_of_samples = len(glucose_df)
+        elif df_dict[2]['glucose_level'].sum() == 0:
+            baseline_df = df_2
+            glucose_df = df_1
 
-    #create template baseline df the same size as df
-    baseline = pd.concat([basline_df_mean] * num_of_samples, ignore_index=True)
+        tmp_features = glucose_df['Round']
+        df_1.drop('Round', inplace = True, axis = 1)
+        df_2.drop('Round', inplace = True, axis = 1)
 
-    glucose_df.reset_index(drop = True, inplace = True)
-    baseline.reset_index(drop=True, inplace=True)
-    output_df = glucose_df.subtract(baseline)
+        # find mean of the baseline
+        basline_df_mean = baseline_df.iloc[:].mean(axis=0).to_frame().T
 
-    return output_df
+        #set temperature to zero
+        #basline_df_mean['Temp'] = 0
+        num_of_samples = len(glucose_df)
+
+        #create template baseline df the same size as df
+        baseline = pd.concat([basline_df_mean] * num_of_samples, ignore_index=True)
+
+        glucose_df.reset_index(drop = True, inplace = True)
+        baseline.reset_index(drop=True, inplace=True)
+        tmp_features.reset_index(drop=True, inplace=True)
+
+        output_df = pd.DataFrame(glucose_df.values - baseline.values)
+        glucose_level = output_df.iloc[: , -1:]
+        output_df = output_df.iloc[: , :-1]
+
+        output_df['Round'] = tmp_features
+        output_df['glucose_level'] = glucose_level
+
+
+        #rename glucose level
+        #output_df.columns = [*output_df.columns[:-1], 'glucose_level']
+        #output_df['Round'] = tmp_features
+
+
+        #output_df.iloc[:,0:-2].set_axis(feature_name.pop(2), axis=1, inplace=False)
+        output.append(output_df)
+
+    output = pd.concat(output)
+
+
+    return output
 
 
 
@@ -136,3 +170,73 @@ def Absorbance_2_Transmittance(input, output_type):
     return output
 
 
+#####################################################################
+#####################################################################
+#         function to plot glucose concentration
+#####################################################################
+#####################################################################
+
+def plot_glucose_concentration(all_data, title, ignore_features = ['Temp','measurement_type','Round'], save = False , bounds = None):
+    fig, ax = plt.subplots()
+
+    color_palets_options = ['black','red','blue','green', 'orange', 'magenta']
+    glucose_levels = all_data['glucose_level'].unique()
+
+
+    num_concentration = len(glucose_levels)
+    color_palets = color_palets_options[:num_concentration]
+
+
+
+    glucose_level_list = []
+    patches = []
+    for indx, x in enumerate(glucose_levels):
+
+        tmp = all_data[all_data['glucose_level'] == x ]
+        glucose_level_list.append(tmp)
+
+        #ignore the usless features
+        for ind in ignore_features:
+            if ind in tmp.columns:
+                tmp.drop(ind, inplace = True, axis =1)
+
+        tmp.drop('glucose_level', inplace = True, axis = 1)
+        colour = color_palets[indx]
+        ax.plot(tmp.columns, tmp.T, color=colour)
+        patch = mpatches.Patch(color=colour, label='Glucose Level ' + str(x))
+        patches.append(patch)
+
+
+    num_x_tick = round(len(tmp.columns)/10)
+    ax.xaxis.set_major_locator(plt.MaxNLocator(num_x_tick))
+    plt.legend(handles=patches)
+    plt.xlabel('Wavelength')
+    plt.grid()
+    plt.title(title)
+
+
+    if bounds is not None:
+        x_1 = bounds[0]
+        x_2 = bounds[1]
+        ax.axvspan(x_1, x_2, alpha=0.3, color='red')
+
+
+
+    plt.show()
+
+
+def find_nearest(array, values, K=1):
+
+    '''
+    Returns the index of the nearest two element to the value
+    :param array:
+    :param values:
+    :return: indices
+    '''
+    #indices = np.abs(np.subtract.outer(array, values)).argmin(0)
+    #return indices
+
+    #K = 2
+    X = abs(array - values)
+    indexes = sorted(range(len(X)), key=lambda sub: X[sub])[:K]
+    return indexes
