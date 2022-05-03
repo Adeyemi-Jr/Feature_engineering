@@ -176,7 +176,7 @@ def Absorbance_2_Transmittance(input, output_type):
 #####################################################################
 #####################################################################
 
-def plot_glucose_concentration(all_data, title, ignore_features = ['Temp','measurement_type','Round'], save = False , bounds = None):
+def plot_glucose_concentration(all_data, title, ignore_features = None, save = False , bounds = None, plot_type = 'line'):
     fig, ax = plt.subplots()
 
     color_palets_options = ['black','red','blue','green', 'orange', 'magenta']
@@ -195,19 +195,31 @@ def plot_glucose_concentration(all_data, title, ignore_features = ['Temp','measu
         tmp = all_data[all_data['glucose_level'] == x ]
         glucose_level_list.append(tmp)
 
+
         #ignore the usless features
-        for ind in ignore_features:
-            if ind in tmp.columns:
-                tmp.drop(ind, inplace = True, axis =1)
+        if ignore_features != None:
+            for ind in ignore_features:
+                if ind in tmp.columns:
+                    tmp.drop(ind, inplace = True, axis =1)
 
         tmp.drop('glucose_level', inplace = True, axis = 1)
         colour = color_palets[indx]
-        ax.plot(tmp.columns, tmp.T, color=colour)
+        #ax.plot(tmp.columns, tmp.T, color=colour, kind=plot_type)
+
+        if plot_type == 'line':
+            ax.plot(tmp.columns, tmp.T, color=colour)
+        elif plot_type == 'scatter':
+            ax.plot(tmp.columns, tmp.T, color=colour, marker= 'o',markerfacecolor='None', linestyle = 'None')
+
         patch = mpatches.Patch(color=colour, label='Glucose Level ' + str(x))
         patches.append(patch)
 
 
     num_x_tick = round(len(tmp.columns)/10)
+    if num_x_tick == 0:
+        num_x_tick = 4
+
+
     ax.xaxis.set_major_locator(plt.MaxNLocator(num_x_tick))
     plt.legend(handles=patches)
     plt.xlabel('Wavelength')
