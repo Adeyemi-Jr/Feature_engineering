@@ -240,7 +240,7 @@ def plot_glucose_concentration(all_data, title, ignore_features = None, save = F
 def find_nearest(array, values, K=1):
 
     '''
-    Returns the index of the nearest two element to the value
+    Returns the index of the nearest k element to the value as list
     :param array:
     :param values:
     :return: indices
@@ -252,3 +252,15 @@ def find_nearest(array, values, K=1):
     X = abs(array - values)
     indexes = sorted(range(len(X)), key=lambda sub: X[sub])[:K]
     return indexes
+
+def find_nearest_2(array, value):
+    '''
+
+    :param array:  np array
+    :param value: int/np array
+
+    :return:  Index and value at index
+    '''
+    array = np.asarray(array)
+    idx = (np.abs(array - value)).argmin()
+    return idx, array[idx]

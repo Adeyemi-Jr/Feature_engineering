@@ -74,7 +74,7 @@ all_data.reset_index(drop = True, inplace = True)
 
 
 
-def ingetrage_all_frequency(data, LED_kernel_input, detector_response,list_tmp_features = ['Temp', 'Round','measurement_type', 'glucose_level']):
+def ingetrage_all_frequency(data, LED_kernel_input, detector_response,list_tmp_features = ['Temp', 'Round','measurement_type', 'glucose_level'], integrate = True):
 
     data = data.copy()
     #plot original data
@@ -114,10 +114,22 @@ def ingetrage_all_frequency(data, LED_kernel_input, detector_response,list_tmp_f
 
     df = pd.DataFrame(df.values * detector_resp_tmp.values)
 
-    df.columns = numeric_df.columns
+    #df.columns = numeric_df.columns
+    if integrate == True:
+        df = df.sum(axis=1)
+        df = df.to_frame()
+
+        #get name of integrated LED
+        df.columns = LED_kernel.index
 
     #add Glucose concentration and Rounds to df
     df[['Round','glucose_level']] = tmp_df[['Round','glucose_level']]
+
+
+
+
+
+
 
 
     #subtract baseline measurment
@@ -138,16 +150,15 @@ def ingetrage_all_frequency(data, LED_kernel_input, detector_response,list_tmp_f
 
 
 
-    plot_glucose_concentration(df_subtracted, title = 'Deltas after applying Kernel ('+ kernel_name[0] +'nm) and detector response', ignore_features=['Round'], save=False,bounds=None)
+    #plot_glucose_concentration(df_subtracted, title = 'Deltas after applying Kernel ('+ kernel_name[0] +'nm) and detector response', ignore_features=['Round'], save=False,bounds=None)
 
     output_df = df_subtracted.iloc[:,0:-2]
-    output_df_ = output_df.sum(axis=1).to_frame()
-    output = output_df_
-    output['glucose_level'] = df_subtracted['glucose_level']
+    if integrate == True:
+        output_df_ = output_df.sum(axis=1).to_frame()
+        output_df = output_df_
 
-    A = 1
-
-    return output
+    output_df['glucose_level'] = df_subtracted['glucose_level']
+    return output_df
 
 
 
@@ -165,13 +176,25 @@ integrated_df = []
 for Led in num_LEDs:
 
     Led_ = LEDs[[Led]]
-    integrate_ = ingetrage_all_frequency(all_data, Led_, detector_resp)
+    integrate_ = ingetrage_all_frequency(all_data, Led_, detector_resp, integrate=False)
 
 
 
-    #integrate_.rename(columns={ integrate_.columns[0]: Led+"nm" }, inplace = True)
-    integrate_.rename(columns={ integrate_.columns[0]: Led }, inplace = True)
 
+
+    #integrate_.rename(columns={ integrate_.columns[0]: Led }, inplace = True)
+
+    #replace the column name to match the wavelengths
+    temp_col_names = list(all_data.columns)
+    col_names = temp_col_names[:-4]
+    col_names.append(temp_col_names[-1])
+    integrate_.columns = col_names
+    integrate_.to_csv('../data/processed/20220211/processed_delta_'+ Led +'nm.csv',index = False)
+
+
+
+
+"""
     integrated_df.append(integrate_)
 
 integrated_df = pd.concat(integrated_df,axis=1)
@@ -179,10 +202,15 @@ integrated_df = pd.concat(integrated_df,axis=1)
 #remove duplicate column
 integrated_df = integrated_df.loc[:,~integrated_df.columns.duplicated()]
 
-plot_glucose_concentration(integrated_df, title = 'processed data', save=False, plot_type='scatter')
+plot_glucose_concentration(integrated_df, title = 'Integration before Delta', save=False, plot_type='scatter')
 
 
-integrated_df.to_csv('../data/processed/20220211/processed_integrated.csv',index = False)
+#integrated_df.to_csv('../data/processed/20220211/processed_integrated.csv',index = False)
+
+"""
+
+
+
 
 
 '''
