@@ -136,6 +136,11 @@ while window_size <= window_size_limit:
 
     print('Window size:', window_size, '    Acc:', acc )
 A  =1
+plt.plot(accuracy_list, marker= '*')
+plt.title('Accuracy score')
+plt.xlabel('window size')
+plt.ylabel('Accuracy')
+plt.show()
 
 
 
